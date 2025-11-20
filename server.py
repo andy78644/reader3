@@ -115,6 +115,7 @@ class ChatRequest(BaseModel):
     book_id: str
     chapter_index: int
     api_key: str
+    selected_text: Optional[str] = None  # Optional selected text for discussion
 
 
 @app.post("/api/chat")
@@ -147,7 +148,22 @@ async def chat_with_ai(chat_request: ChatRequest):
         model = genai.GenerativeModel('gemini-1.5-flash')
 
         # Prepare the context
-        book_context = f"""
+        # If user selected specific text, prioritize that
+        if chat_request.selected_text:
+            book_context = f"""
+書籍資訊：
+- 標題：{book.metadata.title}
+- 作者：{', '.join(book.metadata.authors) if book.metadata.authors else '未知'}
+- 當前章節：{chat_request.chapter_index + 1} / {len(book.spine)}
+
+用戶選取的文字：
+「{chat_request.selected_text}」
+
+周圍上下文（當前章節部分內容）：
+{current_chapter.text[:2000]}
+"""
+        else:
+            book_context = f"""
 書籍資訊：
 - 標題：{book.metadata.title}
 - 作者：{', '.join(book.metadata.authors) if book.metadata.authors else '未知'}
@@ -159,7 +175,17 @@ async def chat_with_ai(chat_request: ChatRequest):
 """
 
         # Create the prompt
-        system_prompt = """你是一個專業的閱讀助手，專門幫助讀者理解和討論書籍內容。
+        if chat_request.selected_text:
+            system_prompt = """你是一個專業的閱讀助手，專門幫助讀者理解和討論書籍內容。
+你的任務是：
+1. 針對用戶選取的特定文字提供深入分析
+2. 解釋文字的意義、背景或重要性
+3. 如果適用，可以聯繫整個章節或書籍的脈絡
+4. 用清晰、友善的中文回答
+
+請保持回答簡潔但有深度，大約 2-3 段文字。特別關注用戶選取的文字部分。"""
+        else:
+            system_prompt = """你是一個專業的閱讀助手，專門幫助讀者理解和討論書籍內容。
 你的任務是：
 1. 回答關於書籍內容的問題
 2. 提供深入的分析和見解

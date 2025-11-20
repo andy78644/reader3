@@ -206,6 +206,31 @@
             cursor: not-allowed;
         }
 
+        /* Text Selection Popup */
+        .selection-popup {
+            position: absolute;
+            background: #3498db;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-family: -apple-system, sans-serif;
+            font-size: 0.9em;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            z-index: 1001;
+            display: none;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+        }
+        .selection-popup:hover {
+            background: #2980b9;
+            transform: scale(1.05);
+        }
+        .selection-popup::before {
+            content: '💬';
+            margin-right: 6px;
+        }
+
     </style>
 </head>
 <body>
@@ -321,6 +346,11 @@
     <!-- Chat Toggle Button -->
     <button class="chat-toggle" onclick="toggleChat()" id="chat-toggle">💬</button>
 
+    <!-- Text Selection Popup -->
+    <div class="selection-popup" id="selection-popup" onclick="discussSelection()">
+        討論選文
+    </div>
+
     <script>
         // Helper to map TOC filenames to Spine Indices
         // Pass the spine data from python to JS
@@ -351,6 +381,9 @@
         }
 
         // ========== CHAT FUNCTIONALITY ==========
+
+        // Store selected text for the next message
+        let pendingSelectedText = null;
 
         // Toggle chat sidebar
         function toggleChat() {
@@ -434,18 +467,27 @@
             input.value = '';
 
             try {
+                // Prepare request body
+                const requestBody = {
+                    message: message,
+                    book_id: '{{ book_id }}',
+                    chapter_index: {{ chapter_index }},
+                    api_key: apiKey
+                };
+
+                // Add selected text if available
+                if (pendingSelectedText) {
+                    requestBody.selected_text = pendingSelectedText;
+                    pendingSelectedText = null; // Clear after sending
+                }
+
                 // Send to backend API
                 const response = await fetch('/api/chat', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({
-                        message: message,
-                        book_id: '{{ book_id }}',
-                        chapter_index: {{ chapter_index }},
-                        api_key: apiKey
-                    })
+                    body: JSON.stringify(requestBody)
                 });
 
                 if (!response.ok) {
@@ -474,7 +516,92 @@
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', () => {
             loadApiKey();
+            initTextSelection();
         });
+
+        // ========== TEXT SELECTION FUNCTIONALITY ==========
+
+        let selectedText = '';
+
+        function initTextSelection() {
+            const contentArea = document.querySelector('.book-content');
+            const popup = document.getElementById('selection-popup');
+
+            // Listen for text selection
+            document.addEventListener('mouseup', (e) => {
+                // Small delay to ensure selection is complete
+                setTimeout(() => {
+                    const selection = window.getSelection();
+                    const text = selection.toString().trim();
+
+                    if (text && text.length > 0) {
+                        // Check if selection is within book content
+                        const range = selection.getRangeAt(0);
+                        const container = range.commonAncestorContainer;
+                        const isInContent = contentArea.contains(container.nodeType === 3 ? container.parentNode : container);
+
+                        if (isInContent) {
+                            selectedText = text;
+                            showSelectionPopup(e.pageX, e.pageY);
+                        } else {
+                            hideSelectionPopup();
+                        }
+                    } else {
+                        hideSelectionPopup();
+                    }
+                }, 10);
+            });
+
+            // Hide popup when clicking elsewhere
+            document.addEventListener('mousedown', (e) => {
+                if (!popup.contains(e.target)) {
+                    // Don't hide immediately if clicking on the popup
+                    const selection = window.getSelection();
+                    if (selection.toString().trim().length === 0) {
+                        hideSelectionPopup();
+                    }
+                }
+            });
+        }
+
+        function showSelectionPopup(x, y) {
+            const popup = document.getElementById('selection-popup');
+            popup.style.display = 'block';
+            popup.style.left = x + 'px';
+            popup.style.top = (y - 50) + 'px'; // Position above cursor
+        }
+
+        function hideSelectionPopup() {
+            const popup = document.getElementById('selection-popup');
+            popup.style.display = 'none';
+            selectedText = '';
+        }
+
+        function discussSelection() {
+            if (!selectedText) return;
+
+            // Store selected text for API call
+            pendingSelectedText = selectedText;
+
+            // Open chat sidebar if closed
+            const sidebar = document.getElementById('chat-sidebar');
+            const toggleBtn = document.getElementById('chat-toggle');
+            if (sidebar.classList.contains('collapsed')) {
+                sidebar.classList.remove('collapsed');
+                toggleBtn.classList.add('active');
+            }
+
+            // Fill chat input with selected text prompt
+            const input = document.getElementById('chat-input');
+            input.value = `請解釋這段文字：\n\n「${selectedText}」`;
+            input.focus();
+
+            // Hide popup
+            hideSelectionPopup();
+
+            // Clear browser selection
+            window.getSelection().removeAllRanges();
+        }
     </script>
 </body>
 </html>
