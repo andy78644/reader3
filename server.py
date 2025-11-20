@@ -144,8 +144,8 @@ async def chat_with_ai(chat_request: ChatRequest):
         # Configure Gemini API
         genai.configure(api_key=chat_request.api_key)
 
-        # Create the model
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        # Create the model (use the correct model name)
+        model = genai.GenerativeModel('gemini-1.5-flash-latest')
 
         # Prepare the context
         # If user selected specific text, prioritize that
