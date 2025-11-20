@@ -39,29 +39,35 @@
         /* Chat Sidebar */
         #chat-sidebar {
             width: 380px;
+            min-width: 280px;
+            max-width: 600px;
             background: #ffffff;
             border-left: 1px solid #e9ecef;
             display: flex;
             flex-direction: column;
             flex-shrink: 0;
             transition: margin-right 0.3s ease;
+            position: relative;
         }
         #chat-sidebar.collapsed {
-            margin-right: -380px;
+            margin-right: calc(-1 * var(--chat-width, 380px));
+        }
+        #chat-sidebar.resizing {
+            transition: none;
         }
 
         /* Chat Toggle Button */
         .chat-toggle {
             position: fixed;
             right: 20px;
-            bottom: 20px;
+            top: 20px;
             background: #3498db;
             color: white;
             border: none;
             border-radius: 50%;
-            width: 56px;
-            height: 56px;
-            font-size: 24px;
+            width: 50px;
+            height: 50px;
+            font-size: 20px;
             cursor: pointer;
             box-shadow: 0 2px 10px rgba(0,0,0,0.2);
             z-index: 1000;
@@ -73,6 +79,25 @@
         }
         .chat-toggle.active {
             background: #e74c3c;
+        }
+
+        /* Chat Resizer */
+        .chat-resizer {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 5px;
+            height: 100%;
+            cursor: ew-resize;
+            background: transparent;
+            transition: background 0.2s ease;
+            z-index: 10;
+        }
+        .chat-resizer:hover {
+            background: #3498db;
+        }
+        .chat-resizer.resizing {
+            background: #2980b9;
         }
 
         /* Chat Header */
@@ -318,6 +343,7 @@
 
     <!-- CHAT SIDEBAR -->
     <div id="chat-sidebar" class="collapsed">
+        <div class="chat-resizer" id="chat-resizer"></div>
         <div class="chat-header">
             <h3>💬 AI 聊天助手</h3>
             <div class="chat-settings">
@@ -550,7 +576,72 @@
             loadApiKey();
             loadModelSelection();
             initTextSelection();
+            initChatResizer();
+            loadChatWidth();
         });
+
+        // ========== CHAT RESIZER FUNCTIONALITY ==========
+
+        function initChatResizer() {
+            const resizer = document.getElementById('chat-resizer');
+            const sidebar = document.getElementById('chat-sidebar');
+            let isResizing = false;
+            let startX = 0;
+            let startWidth = 0;
+
+            resizer.addEventListener('mousedown', (e) => {
+                isResizing = true;
+                startX = e.clientX;
+                startWidth = sidebar.offsetWidth;
+                sidebar.classList.add('resizing');
+                resizer.classList.add('resizing');
+                document.body.style.cursor = 'ew-resize';
+                document.body.style.userSelect = 'none';
+                e.preventDefault();
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isResizing) return;
+
+                const deltaX = startX - e.clientX;
+                const newWidth = startWidth + deltaX;
+
+                // Enforce min and max width
+                const minWidth = 280;
+                const maxWidth = 600;
+                const constrainedWidth = Math.max(minWidth, Math.min(maxWidth, newWidth));
+
+                sidebar.style.width = constrainedWidth + 'px';
+                sidebar.style.setProperty('--chat-width', constrainedWidth + 'px');
+            });
+
+            document.addEventListener('mouseup', () => {
+                if (isResizing) {
+                    isResizing = false;
+                    sidebar.classList.remove('resizing');
+                    resizer.classList.remove('resizing');
+                    document.body.style.cursor = '';
+                    document.body.style.userSelect = '';
+
+                    // Save width to localStorage
+                    saveChatWidth(sidebar.offsetWidth);
+                }
+            });
+        }
+
+        function saveChatWidth(width) {
+            localStorage.setItem('chat_sidebar_width', width);
+        }
+
+        function loadChatWidth() {
+            const savedWidth = localStorage.getItem('chat_sidebar_width');
+            if (savedWidth) {
+                const sidebar = document.getElementById('chat-sidebar');
+                const width = parseInt(savedWidth);
+                sidebar.style.width = width + 'px';
+                sidebar.style.setProperty('--chat-width', width + 'px');
+            }
+        }
 
         // ========== TEXT SELECTION FUNCTIONALITY ==========
 
