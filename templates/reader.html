@@ -36,6 +36,176 @@
         .nav-btn:hover { background: #3498db; color: white; }
         .nav-btn.disabled { opacity: 0.5; pointer-events: none; border-color: #ccc; color: #ccc; }
 
+        /* Chat Sidebar */
+        #chat-sidebar {
+            width: 380px;
+            background: #ffffff;
+            border-left: 1px solid #e9ecef;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            transition: margin-right 0.3s ease;
+        }
+        #chat-sidebar.collapsed {
+            margin-right: -380px;
+        }
+
+        /* Chat Toggle Button */
+        .chat-toggle {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 56px;
+            height: 56px;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+        .chat-toggle:hover {
+            background: #2980b9;
+            transform: scale(1.1);
+        }
+        .chat-toggle.active {
+            background: #e74c3c;
+        }
+
+        /* Chat Header */
+        .chat-header {
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            font-family: -apple-system, sans-serif;
+        }
+        .chat-header h3 {
+            margin: 0 0 10px 0;
+            color: #495057;
+            font-size: 1.1em;
+        }
+
+        /* Settings Section */
+        .chat-settings {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #dee2e6;
+        }
+        .chat-settings input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-family: -apple-system, sans-serif;
+            box-sizing: border-box;
+        }
+        .chat-settings button {
+            margin-top: 8px;
+            padding: 6px 12px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85em;
+            font-family: -apple-system, sans-serif;
+        }
+        .chat-settings button:hover {
+            background: #218838;
+        }
+        .settings-status {
+            margin-top: 8px;
+            font-size: 0.8em;
+            color: #6c757d;
+        }
+
+        /* Chat Messages */
+        .chat-messages {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 20px;
+            font-family: -apple-system, sans-serif;
+        }
+        .chat-message {
+            margin-bottom: 16px;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .chat-message.user {
+            text-align: right;
+        }
+        .chat-message .message-bubble {
+            display: inline-block;
+            padding: 10px 14px;
+            border-radius: 12px;
+            max-width: 80%;
+            word-wrap: break-word;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+        .chat-message.user .message-bubble {
+            background: #3498db;
+            color: white;
+            text-align: left;
+        }
+        .chat-message.ai .message-bubble {
+            background: #f1f3f5;
+            color: #212529;
+            text-align: left;
+        }
+        .chat-message.system .message-bubble {
+            background: #fff3cd;
+            color: #856404;
+            text-align: center;
+            font-size: 0.85em;
+        }
+
+        /* Chat Input */
+        .chat-input-container {
+            padding: 20px;
+            border-top: 1px solid #e9ecef;
+            background: #f8f9fa;
+        }
+        .chat-input-form {
+            display: flex;
+            gap: 10px;
+        }
+        .chat-input-form textarea {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 0.9em;
+            font-family: -apple-system, sans-serif;
+            resize: none;
+            height: 60px;
+        }
+        .chat-input-form button {
+            padding: 10px 20px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-family: -apple-system, sans-serif;
+            font-weight: bold;
+        }
+        .chat-input-form button:hover {
+            background: #2980b9;
+        }
+        .chat-input-form button:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+        }
+
     </style>
 </head>
 <body>
@@ -121,6 +291,36 @@
         </div>
     </div>
 
+    <!-- CHAT SIDEBAR -->
+    <div id="chat-sidebar" class="collapsed">
+        <div class="chat-header">
+            <h3>💬 AI 聊天助手</h3>
+            <div class="chat-settings">
+                <input type="password" id="api-key-input" placeholder="輸入 Gemini API Key" />
+                <button onclick="saveApiKey()">儲存 API Key</button>
+                <div class="settings-status" id="settings-status"></div>
+            </div>
+        </div>
+
+        <div class="chat-messages" id="chat-messages">
+            <div class="chat-message system">
+                <div class="message-bubble">
+                    歡迎使用 AI 聊天助手！請先設定 Gemini API Key，然後就可以開始討論這本書了。
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-input-container">
+            <form class="chat-input-form" onsubmit="sendMessage(event)">
+                <textarea id="chat-input" placeholder="問我關於這本書的任何問題..." required></textarea>
+                <button type="submit" id="send-btn">發送</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Chat Toggle Button -->
+    <button class="chat-toggle" onclick="toggleChat()" id="chat-toggle">💬</button>
+
     <script>
         // Helper to map TOC filenames to Spine Indices
         // Pass the spine data from python to JS
@@ -149,6 +349,132 @@
                 console.log("Could not find index for", filename);
             }
         }
+
+        // ========== CHAT FUNCTIONALITY ==========
+
+        // Toggle chat sidebar
+        function toggleChat() {
+            const sidebar = document.getElementById('chat-sidebar');
+            const toggleBtn = document.getElementById('chat-toggle');
+            sidebar.classList.toggle('collapsed');
+            toggleBtn.classList.toggle('active');
+        }
+
+        // Save API Key to localStorage
+        function saveApiKey() {
+            const apiKey = document.getElementById('api-key-input').value.trim();
+            if (!apiKey) {
+                showStatus('請輸入 API Key', 'error');
+                return;
+            }
+
+            localStorage.setItem('gemini_api_key', apiKey);
+            showStatus('API Key 已儲存！', 'success');
+            document.getElementById('api-key-input').value = '';
+        }
+
+        // Load API Key from localStorage on page load
+        function loadApiKey() {
+            const apiKey = localStorage.getItem('gemini_api_key');
+            if (apiKey) {
+                showStatus('API Key 已載入', 'success');
+            }
+        }
+
+        // Show status message
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('settings-status');
+            statusDiv.textContent = message;
+            statusDiv.style.color = type === 'success' ? '#28a745' : '#dc3545';
+            setTimeout(() => {
+                statusDiv.textContent = '';
+            }, 3000);
+        }
+
+        // Add message to chat
+        function addMessage(content, type) {
+            const messagesDiv = document.getElementById('chat-messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chat-message ${type}`;
+
+            const bubble = document.createElement('div');
+            bubble.className = 'message-bubble';
+            bubble.textContent = content;
+
+            messageDiv.appendChild(bubble);
+            messagesDiv.appendChild(messageDiv);
+
+            // Scroll to bottom
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        // Send message to AI
+        async function sendMessage(event) {
+            event.preventDefault();
+
+            const input = document.getElementById('chat-input');
+            const sendBtn = document.getElementById('send-btn');
+            const message = input.value.trim();
+
+            if (!message) return;
+
+            // Check if API key exists
+            const apiKey = localStorage.getItem('gemini_api_key');
+            if (!apiKey) {
+                addMessage('請先設定 Gemini API Key', 'system');
+                return;
+            }
+
+            // Disable input while processing
+            input.disabled = true;
+            sendBtn.disabled = true;
+
+            // Add user message
+            addMessage(message, 'user');
+            input.value = '';
+
+            try {
+                // Send to backend API
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        book_id: '{{ book_id }}',
+                        chapter_index: {{ chapter_index }},
+                        api_key: apiKey
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (data.error) {
+                    addMessage(`錯誤: ${data.error}`, 'system');
+                } else {
+                    addMessage(data.response, 'ai');
+                }
+
+            } catch (error) {
+                console.error('Chat error:', error);
+                addMessage(`發生錯誤: ${error.message}`, 'system');
+            } finally {
+                // Re-enable input
+                input.disabled = false;
+                sendBtn.disabled = false;
+                input.focus();
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadApiKey();
+        });
     </script>
 </body>
 </html>

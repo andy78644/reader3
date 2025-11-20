@@ -4,9 +4,12 @@ from functools import lru_cache
 from typing import Optional
 
 from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from pydantic import BaseModel
+
+import google.generativeai as genai
 
 from reader3 import Book, BookMetadata, ChapterContent, TOCEntry
 
@@ -103,6 +106,89 @@ async def serve_image(book_id: str, image_name: str):
         raise HTTPException(status_code=404, detail="Image not found")
 
     return FileResponse(img_path)
+
+
+# ========== AI CHAT API ==========
+
+class ChatRequest(BaseModel):
+    message: str
+    book_id: str
+    chapter_index: int
+    api_key: str
+
+
+@app.post("/api/chat")
+async def chat_with_ai(chat_request: ChatRequest):
+    """
+    Handle AI chat requests using Gemini API.
+    """
+    try:
+        # Load the book
+        book = load_book_cached(chat_request.book_id)
+        if not book:
+            return JSONResponse(
+                status_code=404,
+                content={"error": "書籍未找到"}
+            )
+
+        # Get current chapter
+        if chat_request.chapter_index < 0 or chat_request.chapter_index >= len(book.spine):
+            return JSONResponse(
+                status_code=404,
+                content={"error": "章節未找到"}
+            )
+
+        current_chapter = book.spine[chat_request.chapter_index]
+
+        # Configure Gemini API
+        genai.configure(api_key=chat_request.api_key)
+
+        # Create the model
+        model = genai.GenerativeModel('gemini-1.5-flash')
+
+        # Prepare the context
+        book_context = f"""
+書籍資訊：
+- 標題：{book.metadata.title}
+- 作者：{', '.join(book.metadata.authors) if book.metadata.authors else '未知'}
+- 語言：{book.metadata.language or '未知'}
+- 當前章節：{chat_request.chapter_index + 1} / {len(book.spine)}
+
+當前章節內容：
+{current_chapter.text[:3000]}  # 限制在 3000 字元以避免超過 token 限制
+"""
+
+        # Create the prompt
+        system_prompt = """你是一個專業的閱讀助手，專門幫助讀者理解和討論書籍內容。
+你的任務是：
+1. 回答關於書籍內容的問題
+2. 提供深入的分析和見解
+3. 用清晰、友善的中文回答
+4. 如果問題與當前章節無關，可以根據書籍元數據提供一般性的回答
+
+請保持回答簡潔但有深度，大約 2-3 段文字。"""
+
+        full_prompt = f"{system_prompt}\n\n{book_context}\n\n用戶問題：{chat_request.message}"
+
+        # Generate response
+        response = model.generate_content(full_prompt)
+
+        return JSONResponse(content={
+            "response": response.text,
+            "chapter_info": {
+                "index": chat_request.chapter_index,
+                "title": current_chapter.title,
+                "total": len(book.spine)
+            }
+        })
+
+    except Exception as e:
+        print(f"Chat error: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"處理請求時發生錯誤：{str(e)}"}
+        )
+
 
 if __name__ == "__main__":
     import uvicorn
