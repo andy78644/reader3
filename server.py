@@ -116,6 +116,7 @@ class ChatRequest(BaseModel):
     chapter_index: int
     api_key: str
     selected_text: Optional[str] = None  # Optional selected text for discussion
+    model_name: Optional[str] = "gemini-2.5-flash"  # Default to latest stable model
 
 
 @app.post("/api/chat")
@@ -144,8 +145,8 @@ async def chat_with_ai(chat_request: ChatRequest):
         # Configure Gemini API
         genai.configure(api_key=chat_request.api_key)
 
-        # Create the model (use the correct model name)
-        model = genai.GenerativeModel('gemini-1.5-flash-latest')
+        # Create the model (use user-selected model or default to Gemini 2.5 Flash)
+        model = genai.GenerativeModel(chat_request.model_name)
 
         # Prepare the context
         # If user selected specific text, prioritize that
