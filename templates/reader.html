@@ -246,6 +246,35 @@
             background: #95a5a6;
             cursor: not-allowed;
         }
+        .chat-input-form button.loading {
+            background: #95a5a6;
+            position: relative;
+        }
+        .chat-input-form button.loading::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            top: 50%;
+            left: 50%;
+            margin-left: -8px;
+            margin-top: -8px;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spinner 0.6s linear infinite;
+        }
+        @keyframes spinner {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Timeout settings */
+        .timeout-indicator {
+            font-size: 0.75em;
+            color: #6c757d;
+            margin-top: 4px;
+            text-align: center;
+        }
 
         /* Text Selection Indicator */
         .selection-indicator {
@@ -415,6 +444,7 @@
                 <textarea id="chat-input" placeholder="問我關於這本書的任何問題..." required></textarea>
                 <button type="submit" id="send-btn">發送</button>
             </form>
+            <div class="timeout-indicator" id="timeout-indicator"></div>
         </div>
     </div>
 
@@ -626,6 +656,7 @@
 
             const input = document.getElementById('chat-input');
             const sendBtn = document.getElementById('send-btn');
+            const timeoutIndicator = document.getElementById('timeout-indicator');
             const message = input.value.trim();
 
             if (!message) return;
@@ -640,10 +671,31 @@
             // Disable input while processing
             input.disabled = true;
             sendBtn.disabled = true;
+            sendBtn.classList.add('loading');
+            sendBtn.textContent = '';
 
             // Add user message
             addMessage(message, 'user');
             input.value = '';
+
+            // Create AbortController for timeout
+            const controller = new AbortController();
+            const timeoutDuration = 60000; // 60 seconds timeout
+            let timeoutId = null;
+
+            // Set up timeout
+            timeoutId = setTimeout(() => {
+                controller.abort();
+            }, timeoutDuration);
+
+            // Show countdown
+            let remainingTime = timeoutDuration / 1000;
+            const countdownInterval = setInterval(() => {
+                remainingTime--;
+                if (remainingTime > 0) {
+                    timeoutIndicator.textContent = `⏱️ 等待回應中... (${remainingTime}秒後超時)`;
+                }
+            }, 1000);
 
             try {
                 // Get selected model
@@ -665,14 +717,20 @@
                     pendingSelectedText = null; // Clear after sending
                 }
 
-                // Send to backend API
+                // Send to backend API with timeout
                 const response = await fetch('/api/chat', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify(requestBody)
+                    body: JSON.stringify(requestBody),
+                    signal: controller.signal
                 });
+
+                // Clear timeout and countdown
+                clearTimeout(timeoutId);
+                clearInterval(countdownInterval);
+                timeoutIndicator.textContent = '';
 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -690,12 +748,25 @@
                 clearSelection();
 
             } catch (error) {
+                // Clear timeout and countdown
+                clearTimeout(timeoutId);
+                clearInterval(countdownInterval);
+                timeoutIndicator.textContent = '';
+
                 console.error('Chat error:', error);
-                addMessage(`發生錯誤: ${error.message}`, 'system');
+
+                if (error.name === 'AbortError') {
+                    addMessage('⚠️ 請求超時（超過60秒）。請檢查網路連線或稍後再試。', 'system');
+                } else {
+                    addMessage(`發生錯誤: ${error.message}`, 'system');
+                }
             } finally {
                 // Re-enable input
                 input.disabled = false;
                 sendBtn.disabled = false;
+                sendBtn.classList.remove('loading');
+                sendBtn.textContent = '發送';
+                timeoutIndicator.textContent = '';
                 input.focus();
             }
         }
