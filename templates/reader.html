@@ -844,19 +844,13 @@
                 }, 10);
             });
 
-            // Restore selection when clicking in chat sidebar
+            // Restore selection when clicking in chat sidebar (but not on input elements)
             chatSidebar.addEventListener('mousedown', (e) => {
-                // For input elements, prevent default to keep selection, but don't restore
-                if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') {
-                    if (savedRange) {
-                        e.preventDefault();
-                        e.target.focus();
-                    }
-                    return;
-                }
-
-                // Don't restore selection when clicking on buttons or selects
-                if (e.target.tagName === 'BUTTON' || e.target.tagName === 'SELECT') {
+                // Skip input elements and buttons - let them handle focus naturally
+                if (e.target.tagName === 'TEXTAREA' ||
+                    e.target.tagName === 'INPUT' ||
+                    e.target.tagName === 'BUTTON' ||
+                    e.target.tagName === 'SELECT') {
                     return;
                 }
 
@@ -867,6 +861,19 @@
                         selection.removeAllRanges();
                         selection.addRange(savedRange);
                     }, 50);
+                }
+            });
+
+            // Restore selection after input gets focus
+            const chatInput = document.getElementById('chat-input');
+            chatInput.addEventListener('focus', () => {
+                if (savedRange) {
+                    // Use requestAnimationFrame to restore selection after focus is established
+                    requestAnimationFrame(() => {
+                        const selection = window.getSelection();
+                        selection.removeAllRanges();
+                        selection.addRange(savedRange);
+                    });
                 }
             });
 
