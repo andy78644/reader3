@@ -247,29 +247,42 @@
             cursor: not-allowed;
         }
 
-        /* Text Selection Popup */
-        .selection-popup {
+        /* Text Selection Indicator */
+        .selection-indicator {
             position: absolute;
-            background: #3498db;
-            color: white;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #e3f2fd;
+            border-bottom: 2px solid #3498db;
             padding: 8px 16px;
-            border-radius: 20px;
             font-family: -apple-system, sans-serif;
-            font-size: 0.9em;
-            cursor: pointer;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-            z-index: 1001;
+            font-size: 0.85em;
+            color: #1976d2;
             display: none;
-            white-space: nowrap;
-            transition: all 0.2s ease;
+            align-items: center;
+            gap: 10px;
+            z-index: 5;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        .selection-popup:hover {
-            background: #2980b9;
-            transform: scale(1.05);
+        .selection-indicator.active {
+            display: flex;
         }
-        .selection-popup::before {
-            content: '💬';
-            margin-right: 6px;
+        .selection-indicator-text {
+            flex-grow: 1;
+        }
+        .selection-indicator-clear {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .selection-indicator-clear:hover {
+            background: #c0392b;
         }
 
     </style>
@@ -360,6 +373,13 @@
     <!-- CHAT SIDEBAR -->
     <div id="chat-sidebar" class="collapsed">
         <div class="chat-resizer" id="chat-resizer"></div>
+
+        <!-- Selection Indicator -->
+        <div class="selection-indicator" id="selection-indicator">
+            <span class="selection-indicator-text" id="selection-indicator-text">📝 已選取 0 字</span>
+            <button class="selection-indicator-clear" onclick="clearSelection()">清除選文</button>
+        </div>
+
         <div class="chat-header">
             <h3>
                 <span>💬 AI 聊天助手</span>
@@ -400,11 +420,6 @@
 
     <!-- Chat Toggle Button -->
     <button class="chat-toggle" onclick="toggleChat()" id="chat-toggle">💬</button>
-
-    <!-- Text Selection Popup -->
-    <div class="selection-popup" id="selection-popup" onclick="discussSelection()">
-        討論選文
-    </div>
 
     <script>
         // Helper to map TOC filenames to Spine Indices
@@ -671,6 +686,9 @@
                     addMessage(data.response, 'ai');
                 }
 
+                // Clear selection after successful send
+                clearSelection();
+
             } catch (error) {
                 console.error('Chat error:', error);
                 addMessage(`發生錯誤: ${error.message}`, 'system');
@@ -762,10 +780,15 @@
 
         function initTextSelection() {
             const contentArea = document.querySelector('.book-content');
-            const popup = document.getElementById('selection-popup');
 
             // Listen for text selection
             document.addEventListener('mouseup', (e) => {
+                // Don't process if clicking inside chat sidebar
+                const chatSidebar = document.getElementById('chat-sidebar');
+                if (chatSidebar.contains(e.target)) {
+                    return;
+                }
+
                 // Small delay to ensure selection is complete
                 setTimeout(() => {
                     const selection = window.getSelection();
@@ -779,64 +802,44 @@
 
                         if (isInContent) {
                             selectedText = text;
-                            showSelectionPopup(e.pageX, e.pageY);
+                            pendingSelectedText = text;
+                            showSelectionIndicator(text.length);
+
+                            // Auto-open chat sidebar if closed
+                            const sidebar = document.getElementById('chat-sidebar');
+                            const toggleBtn = document.getElementById('chat-toggle');
+                            if (sidebar.classList.contains('collapsed')) {
+                                sidebar.classList.remove('collapsed');
+                                toggleBtn.classList.add('active');
+                                saveSidebarState();
+                            }
                         } else {
-                            hideSelectionPopup();
+                            // Selection outside book content
+                            if (!chatSidebar.contains(container.nodeType === 3 ? container.parentNode : container)) {
+                                clearSelection();
+                            }
                         }
-                    } else {
-                        hideSelectionPopup();
                     }
                 }, 10);
             });
-
-            // Hide popup when clicking elsewhere
-            document.addEventListener('mousedown', (e) => {
-                if (!popup.contains(e.target)) {
-                    // Don't hide immediately if clicking on the popup
-                    const selection = window.getSelection();
-                    if (selection.toString().trim().length === 0) {
-                        hideSelectionPopup();
-                    }
-                }
-            });
         }
 
-        function showSelectionPopup(x, y) {
-            const popup = document.getElementById('selection-popup');
-            popup.style.display = 'block';
-            popup.style.left = x + 'px';
-            popup.style.top = (y - 50) + 'px'; // Position above cursor
+        function showSelectionIndicator(charCount) {
+            const indicator = document.getElementById('selection-indicator');
+            const indicatorText = document.getElementById('selection-indicator-text');
+            indicatorText.textContent = `📝 已選取 ${charCount} 字 - 在下方輸入問題即可討論此段落`;
+            indicator.classList.add('active');
         }
 
-        function hideSelectionPopup() {
-            const popup = document.getElementById('selection-popup');
-            popup.style.display = 'none';
+        function hideSelectionIndicator() {
+            const indicator = document.getElementById('selection-indicator');
+            indicator.classList.remove('active');
+        }
+
+        function clearSelection() {
             selectedText = '';
-        }
-
-        function discussSelection() {
-            if (!selectedText) return;
-
-            // Store selected text for API call
-            pendingSelectedText = selectedText;
-
-            // Open chat sidebar if closed
-            const sidebar = document.getElementById('chat-sidebar');
-            const toggleBtn = document.getElementById('chat-toggle');
-            if (sidebar.classList.contains('collapsed')) {
-                sidebar.classList.remove('collapsed');
-                toggleBtn.classList.add('active');
-            }
-
-            // Fill chat input with selected text prompt
-            const input = document.getElementById('chat-input');
-            input.value = `請解釋這段文字：\n\n「${selectedText}」`;
-            input.focus();
-
-            // Hide popup
-            hideSelectionPopup();
-
-            // Clear browser selection
+            pendingSelectedText = null;
+            hideSelectionIndicator();
             window.getSelection().removeAllRanges();
         }
     </script>
