@@ -830,10 +830,12 @@
         // ========== TEXT SELECTION FUNCTIONALITY ==========
 
         let selectedText = '';
+        let savedRange = null; // Save the Range object to restore selection
 
         function initTextSelection() {
             const contentArea = document.querySelector('.book-content');
             const chatSidebar = document.getElementById('chat-sidebar');
+            const chatInput = document.getElementById('chat-input');
 
             // Listen for text selection
             document.addEventListener('mouseup', (e) => {
@@ -856,19 +858,10 @@
                         if (isInContent) {
                             selectedText = text;
                             pendingSelectedText = text;
+                            savedRange = range.cloneRange(); // Save the range
                             showSelectionIndicator(text.length);
-
-                            // Auto-open chat sidebar if closed
-                            const sidebar = document.getElementById('chat-sidebar');
-                            const toggleBtn = document.getElementById('chat-toggle');
-                            if (sidebar.classList.contains('collapsed')) {
-                                sidebar.classList.remove('collapsed');
-                                toggleBtn.classList.add('active');
-                                saveSidebarState();
-                            }
                         } else {
                             // Clicked outside book content (but not in chat sidebar)
-                            // Clear selection
                             clearSelection();
                         }
                     } else {
@@ -876,6 +869,18 @@
                         clearSelection();
                     }
                 }, 10);
+            });
+
+            // Restore selection when clicking away from chat input
+            chatSidebar.addEventListener('mousedown', (e) => {
+                // If we have a saved selection, restore it after a short delay
+                if (savedRange) {
+                    setTimeout(() => {
+                        const selection = window.getSelection();
+                        selection.removeAllRanges();
+                        selection.addRange(savedRange);
+                    }, 50);
+                }
             });
 
             // Also listen for clicks to clear selection when clicking outside
@@ -910,6 +915,7 @@
         function clearSelection() {
             selectedText = '';
             pendingSelectedText = null;
+            savedRange = null;
             hideSelectionIndicator();
             window.getSelection().removeAllRanges();
         }
