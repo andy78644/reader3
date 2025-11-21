@@ -276,6 +276,12 @@
             text-align: center;
         }
 
+        /* CSS Custom Highlight API for text selection */
+        ::highlight(text-selection) {
+            background-color: #b3d4fc;
+            color: inherit;
+        }
+
     </style>
 </head>
 <body>
@@ -804,12 +810,14 @@
         // ========== TEXT SELECTION FUNCTIONALITY ==========
 
         let selectedText = '';
-        let savedRange = null; // Save the Range object to restore selection
+        let savedRange = null; // Save the Range object for CSS Custom Highlight API
 
         function initTextSelection() {
             const contentArea = document.querySelector('.book-content');
             const chatSidebar = document.getElementById('chat-sidebar');
-            const chatInput = document.getElementById('chat-input');
+
+            // Check if CSS Custom Highlight API is supported
+            const supportsHighlightAPI = 'highlights' in CSS;
 
             // Listen for text selection
             document.addEventListener('mouseup', (e) => {
@@ -833,6 +841,12 @@
                             selectedText = text;
                             pendingSelectedText = text;
                             savedRange = range.cloneRange(); // Save the range
+
+                            // Use CSS Custom Highlight API to create persistent highlight
+                            if (supportsHighlightAPI) {
+                                const highlight = new Highlight(savedRange);
+                                CSS.highlights.set('text-selection', highlight);
+                            }
                         } else {
                             // Clicked outside book content (but not in chat sidebar)
                             clearSelection();
@@ -844,39 +858,7 @@
                 }, 10);
             });
 
-            // Restore selection when clicking in chat sidebar (but not on input elements)
-            chatSidebar.addEventListener('mousedown', (e) => {
-                // Skip input elements and buttons - let them handle focus naturally
-                if (e.target.tagName === 'TEXTAREA' ||
-                    e.target.tagName === 'INPUT' ||
-                    e.target.tagName === 'BUTTON' ||
-                    e.target.tagName === 'SELECT') {
-                    return;
-                }
-
-                // If we have a saved selection, restore it after a short delay
-                if (savedRange) {
-                    setTimeout(() => {
-                        const selection = window.getSelection();
-                        selection.removeAllRanges();
-                        selection.addRange(savedRange);
-                    }, 50);
-                }
-            });
-
-            // Restore selection after input gets focus
-            chatInput.addEventListener('focus', () => {
-                if (savedRange) {
-                    // Use requestAnimationFrame to restore selection after focus is established
-                    requestAnimationFrame(() => {
-                        const selection = window.getSelection();
-                        selection.removeAllRanges();
-                        selection.addRange(savedRange);
-                    });
-                }
-            });
-
-            // Also listen for clicks to clear selection when clicking outside
+            // Listen for clicks to clear selection when clicking outside
             document.addEventListener('mousedown', (e) => {
                 // If clicking in chat sidebar, keep selection
                 if (chatSidebar.contains(e.target)) {
@@ -897,6 +879,13 @@
             selectedText = '';
             pendingSelectedText = null;
             savedRange = null;
+
+            // Clear CSS Custom Highlight
+            if ('highlights' in CSS) {
+                CSS.highlights.delete('text-selection');
+            }
+
+            // Also clear native selection
             window.getSelection().removeAllRanges();
         }
     </script>
