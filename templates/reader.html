@@ -276,27 +276,6 @@
             text-align: center;
         }
 
-        /* Text Selection Indicator */
-        .selection-indicator {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            background: #e3f2fd;
-            border-bottom: 2px solid #3498db;
-            padding: 10px 16px;
-            font-family: -apple-system, sans-serif;
-            font-size: 0.85em;
-            color: #1976d2;
-            display: none;
-            text-align: center;
-            z-index: 5;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .selection-indicator.active {
-            display: block;
-        }
-
     </style>
 </head>
 <body>
@@ -385,11 +364,6 @@
     <!-- CHAT SIDEBAR -->
     <div id="chat-sidebar" class="collapsed">
         <div class="chat-resizer" id="chat-resizer"></div>
-
-        <!-- Selection Indicator -->
-        <div class="selection-indicator" id="selection-indicator">
-            <span class="selection-indicator-text" id="selection-indicator-text">📝 已選取 0 字 - 在下方輸入問題即可討論此段落</span>
-        </div>
 
         <div class="chat-header">
             <h3>
@@ -859,7 +833,6 @@
                             selectedText = text;
                             pendingSelectedText = text;
                             savedRange = range.cloneRange(); // Save the range
-                            showSelectionIndicator(text.length);
                         } else {
                             // Clicked outside book content (but not in chat sidebar)
                             clearSelection();
@@ -900,23 +873,10 @@
             });
         }
 
-        function showSelectionIndicator(charCount) {
-            const indicator = document.getElementById('selection-indicator');
-            const indicatorText = document.getElementById('selection-indicator-text');
-            indicatorText.textContent = `📝 已選取 ${charCount} 字 - 在下方輸入問題即可討論此段落`;
-            indicator.classList.add('active');
-        }
-
-        function hideSelectionIndicator() {
-            const indicator = document.getElementById('selection-indicator');
-            indicator.classList.remove('active');
-        }
-
         function clearSelection() {
             selectedText = '';
             pendingSelectedText = null;
             savedRange = null;
-            hideSelectionIndicator();
             window.getSelection().removeAllRanges();
         }
     </script>
