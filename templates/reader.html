@@ -111,6 +111,22 @@
             margin: 0 0 10px 0;
             color: #495057;
             font-size: 1.1em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .chat-header .clear-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.75em;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .chat-header .clear-btn:hover {
+            background: #c82333;
         }
 
         /* Settings Section */
@@ -345,7 +361,10 @@
     <div id="chat-sidebar" class="collapsed">
         <div class="chat-resizer" id="chat-resizer"></div>
         <div class="chat-header">
-            <h3>💬 AI 聊天助手</h3>
+            <h3>
+                <span>💬 AI 聊天助手</span>
+                <button class="clear-btn" onclick="clearChatHistory()" title="清除此書的聊天記錄">清除記錄</button>
+            </h3>
             <div class="chat-settings">
                 <input type="password" id="api-key-input" placeholder="輸入 Gemini API Key" />
                 <button onclick="saveApiKey()">儲存 API Key</button>
@@ -421,12 +440,94 @@
         // Store selected text for the next message
         let pendingSelectedText = null;
 
+        // Get book-specific localStorage key for chat history
+        function getChatHistoryKey() {
+            return `chat_history_{{ book_id }}`;
+        }
+
+        // Save chat history to localStorage
+        function saveChatHistory() {
+            const messagesDiv = document.getElementById('chat-messages');
+            const messages = [];
+
+            messagesDiv.querySelectorAll('.chat-message').forEach(msg => {
+                const bubble = msg.querySelector('.message-bubble');
+                const type = msg.classList.contains('user') ? 'user' :
+                            msg.classList.contains('ai') ? 'ai' : 'system';
+                messages.push({
+                    type: type,
+                    content: bubble.textContent
+                });
+            });
+
+            localStorage.setItem(getChatHistoryKey(), JSON.stringify(messages));
+        }
+
+        // Load chat history from localStorage
+        function loadChatHistory() {
+            const savedHistory = localStorage.getItem(getChatHistoryKey());
+            if (savedHistory) {
+                try {
+                    const messages = JSON.parse(savedHistory);
+                    const messagesDiv = document.getElementById('chat-messages');
+
+                    // Clear welcome message
+                    messagesDiv.innerHTML = '';
+
+                    // Restore messages
+                    messages.forEach(msg => {
+                        addMessageToDOM(msg.content, msg.type, false); // false = don't save
+                    });
+                } catch (e) {
+                    console.error('Failed to load chat history:', e);
+                }
+            }
+        }
+
+        // Clear chat history for current book
+        function clearChatHistory() {
+            localStorage.removeItem(getChatHistoryKey());
+            const messagesDiv = document.getElementById('chat-messages');
+            messagesDiv.innerHTML = `
+                <div class="chat-message system">
+                    <div class="message-bubble">
+                        歡迎使用 AI 聊天助手！請先設定 Gemini API Key，然後就可以開始討論這本書了。
+                    </div>
+                </div>
+            `;
+        }
+
         // Toggle chat sidebar
         function toggleChat() {
             const sidebar = document.getElementById('chat-sidebar');
             const toggleBtn = document.getElementById('chat-toggle');
             sidebar.classList.toggle('collapsed');
             toggleBtn.classList.toggle('active');
+
+            // Save sidebar state
+            saveSidebarState();
+        }
+
+        // Save sidebar open/closed state
+        function saveSidebarState() {
+            const sidebar = document.getElementById('chat-sidebar');
+            const isOpen = !sidebar.classList.contains('collapsed');
+            localStorage.setItem('chat_sidebar_open', isOpen ? 'true' : 'false');
+        }
+
+        // Load sidebar state
+        function loadSidebarState() {
+            const isOpen = localStorage.getItem('chat_sidebar_open') === 'true';
+            const sidebar = document.getElementById('chat-sidebar');
+            const toggleBtn = document.getElementById('chat-toggle');
+
+            if (isOpen) {
+                sidebar.classList.remove('collapsed');
+                toggleBtn.classList.add('active');
+            } else {
+                sidebar.classList.add('collapsed');
+                toggleBtn.classList.remove('active');
+            }
         }
 
         // Save API Key to localStorage
@@ -477,8 +578,8 @@
             }, 3000);
         }
 
-        // Add message to chat
-        function addMessage(content, type) {
+        // Add message to DOM (internal function)
+        function addMessageToDOM(content, type, shouldSave = true) {
             const messagesDiv = document.getElementById('chat-messages');
             const messageDiv = document.createElement('div');
             messageDiv.className = `chat-message ${type}`;
@@ -492,6 +593,16 @@
 
             // Scroll to bottom
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+            // Save to localStorage if requested
+            if (shouldSave) {
+                saveChatHistory();
+            }
+        }
+
+        // Add message to chat (public function)
+        function addMessage(content, type) {
+            addMessageToDOM(content, type, true);
         }
 
         // Send message to AI
@@ -575,6 +686,8 @@
         document.addEventListener('DOMContentLoaded', () => {
             loadApiKey();
             loadModelSelection();
+            loadSidebarState();
+            loadChatHistory();
             initTextSelection();
             initChatResizer();
             loadChatWidth();
