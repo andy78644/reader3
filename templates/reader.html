@@ -844,16 +844,21 @@
                 }, 10);
             });
 
-            // Restore selection when clicking away from chat input
+            // Restore selection when clicking in chat sidebar
             chatSidebar.addEventListener('mousedown', (e) => {
+                // For input elements, prevent default to keep selection, but don't restore
+                if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') {
+                    if (savedRange) {
+                        e.preventDefault();
+                        e.target.focus();
+                    }
+                    return;
+                }
+
                 // Don't restore selection when clicking on buttons or selects
                 if (e.target.tagName === 'BUTTON' || e.target.tagName === 'SELECT') {
                     return;
                 }
-
-                // Save the clicked element
-                const clickedElement = e.target;
-                const isInputElement = clickedElement.tagName === 'TEXTAREA' || clickedElement.tagName === 'INPUT';
 
                 // If we have a saved selection, restore it after a short delay
                 if (savedRange) {
@@ -861,11 +866,6 @@
                         const selection = window.getSelection();
                         selection.removeAllRanges();
                         selection.addRange(savedRange);
-
-                        // If clicked on an input element, refocus it after restoring selection
-                        if (isInputElement) {
-                            clickedElement.focus();
-                        }
                     }, 50);
                 }
             });
