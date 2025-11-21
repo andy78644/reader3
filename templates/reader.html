@@ -846,6 +846,14 @@
 
             // Restore selection when clicking away from chat input
             chatSidebar.addEventListener('mousedown', (e) => {
+                // Don't restore selection when clicking on input elements
+                if (e.target.tagName === 'TEXTAREA' ||
+                    e.target.tagName === 'INPUT' ||
+                    e.target.tagName === 'BUTTON' ||
+                    e.target.tagName === 'SELECT') {
+                    return;
+                }
+
                 // If we have a saved selection, restore it after a short delay
                 if (savedRange) {
                     setTimeout(() => {
