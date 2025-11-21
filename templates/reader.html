@@ -36,6 +36,252 @@
         .nav-btn:hover { background: #3498db; color: white; }
         .nav-btn.disabled { opacity: 0.5; pointer-events: none; border-color: #ccc; color: #ccc; }
 
+        /* Chat Sidebar */
+        #chat-sidebar {
+            width: 380px;
+            min-width: 280px;
+            max-width: 600px;
+            background: #ffffff;
+            border-left: 1px solid #e9ecef;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            transition: margin-right 0.3s ease;
+            position: relative;
+        }
+        #chat-sidebar.collapsed {
+            margin-right: calc(-1 * var(--chat-width, 380px));
+        }
+        #chat-sidebar.resizing {
+            transition: none;
+        }
+
+        /* Chat Toggle Button */
+        .chat-toggle {
+            position: fixed;
+            right: 20px;
+            top: 20px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+        .chat-toggle:hover {
+            background: #2980b9;
+            transform: scale(1.1);
+        }
+        .chat-toggle.active {
+            background: #e74c3c;
+        }
+
+        /* Chat Resizer */
+        .chat-resizer {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 5px;
+            height: 100%;
+            cursor: ew-resize;
+            background: transparent;
+            transition: background 0.2s ease;
+            z-index: 10;
+        }
+        .chat-resizer:hover {
+            background: #3498db;
+        }
+        .chat-resizer.resizing {
+            background: #2980b9;
+        }
+
+        /* Chat Header */
+        .chat-header {
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            font-family: -apple-system, sans-serif;
+        }
+        .chat-header h3 {
+            margin: 0 0 10px 0;
+            color: #495057;
+            font-size: 1.1em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .chat-header .clear-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.75em;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .chat-header .clear-btn:hover {
+            background: #c82333;
+        }
+
+        /* Settings Section */
+        .chat-settings {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #dee2e6;
+        }
+        .chat-settings input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-family: -apple-system, sans-serif;
+            box-sizing: border-box;
+        }
+        .chat-settings button {
+            margin-top: 8px;
+            padding: 6px 12px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85em;
+            font-family: -apple-system, sans-serif;
+        }
+        .chat-settings button:hover {
+            background: #218838;
+        }
+        .settings-status {
+            margin-top: 8px;
+            font-size: 0.8em;
+            color: #6c757d;
+        }
+
+        /* Chat Messages */
+        .chat-messages {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 20px;
+            font-family: -apple-system, sans-serif;
+        }
+        .chat-message {
+            margin-bottom: 16px;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .chat-message.user {
+            text-align: right;
+        }
+        .chat-message .message-bubble {
+            display: inline-block;
+            padding: 10px 14px;
+            border-radius: 12px;
+            max-width: 80%;
+            word-wrap: break-word;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+        .chat-message.user .message-bubble {
+            background: #3498db;
+            color: white;
+            text-align: left;
+        }
+        .chat-message.ai .message-bubble {
+            background: #f1f3f5;
+            color: #212529;
+            text-align: left;
+        }
+        .chat-message.system .message-bubble {
+            background: #fff3cd;
+            color: #856404;
+            text-align: center;
+            font-size: 0.85em;
+        }
+
+        /* Chat Input */
+        .chat-input-container {
+            padding: 20px;
+            border-top: 1px solid #e9ecef;
+            background: #f8f9fa;
+        }
+        .chat-input-form {
+            display: flex;
+            gap: 10px;
+        }
+        .chat-input-form textarea {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 0.9em;
+            font-family: -apple-system, sans-serif;
+            resize: none;
+            height: 60px;
+        }
+        .chat-input-form button {
+            padding: 10px 20px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-family: -apple-system, sans-serif;
+            font-weight: bold;
+        }
+        .chat-input-form button:hover {
+            background: #2980b9;
+        }
+        .chat-input-form button:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+        }
+        .chat-input-form button.loading {
+            background: #95a5a6;
+            position: relative;
+        }
+        .chat-input-form button.loading::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            top: 50%;
+            left: 50%;
+            margin-left: -8px;
+            margin-top: -8px;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spinner 0.6s linear infinite;
+        }
+        @keyframes spinner {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Timeout settings */
+        .timeout-indicator {
+            font-size: 0.75em;
+            color: #6c757d;
+            margin-top: 4px;
+            text-align: center;
+        }
+
+        /* CSS Custom Highlight API for text selection */
+        ::highlight(text-selection) {
+            background-color: #b3d4fc;
+            color: inherit;
+        }
+
     </style>
 </head>
 <body>
@@ -121,6 +367,52 @@
         </div>
     </div>
 
+    <!-- CHAT SIDEBAR -->
+    <div id="chat-sidebar" class="collapsed">
+        <div class="chat-resizer" id="chat-resizer"></div>
+
+        <div class="chat-header">
+            <h3>
+                <span>💬 AI 聊天助手</span>
+                <button class="clear-btn" onclick="clearChatHistory()" title="清除此書的聊天記錄">清除記錄</button>
+            </h3>
+            <div class="chat-settings">
+                <input type="password" id="api-key-input" placeholder="輸入 Gemini API Key" />
+                <button onclick="saveApiKey()">儲存 API Key</button>
+                <div class="settings-status" id="settings-status"></div>
+
+                <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #dee2e6;">
+                    <label for="model-select" style="display: block; margin-bottom: 6px; font-size: 0.85em; color: #6c757d;">選擇模型：</label>
+                    <select id="model-select" onchange="saveModelSelection()" style="width: 100%; padding: 6px; border: 1px solid #ced4da; border-radius: 4px; font-size: 0.85em; font-family: -apple-system, sans-serif;">
+                        <option value="gemini-2.5-flash">Gemini 2.5 Flash（推薦）</option>
+                        <option value="gemini-2.5-pro">Gemini 2.5 Pro（更強大）</option>
+                        <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+                        <option value="gemini-3-pro-preview">Gemini 3.0 Pro（實驗版）</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-messages" id="chat-messages">
+            <div class="chat-message system">
+                <div class="message-bubble">
+                    歡迎使用 AI 聊天助手！請先設定 Gemini API Key，然後就可以開始討論這本書了。
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-input-container">
+            <form class="chat-input-form" onsubmit="sendMessage(event)">
+                <textarea id="chat-input" placeholder="問我關於這本書的任何問題..." required></textarea>
+                <button type="submit" id="send-btn">發送</button>
+            </form>
+            <div class="timeout-indicator" id="timeout-indicator"></div>
+        </div>
+    </div>
+
+    <!-- Chat Toggle Button -->
+    <button class="chat-toggle" onclick="toggleChat()" id="chat-toggle">💬</button>
+
     <script>
         // Helper to map TOC filenames to Spine Indices
         // Pass the spine data from python to JS
@@ -148,6 +440,453 @@
             } else {
                 console.log("Could not find index for", filename);
             }
+        }
+
+        // ========== CHAT FUNCTIONALITY ==========
+
+        // Store selected text for the next message
+        let pendingSelectedText = null;
+
+        // Get book-specific localStorage key for chat history
+        function getChatHistoryKey() {
+            return `chat_history_{{ book_id }}`;
+        }
+
+        // Save chat history to localStorage
+        function saveChatHistory() {
+            const messagesDiv = document.getElementById('chat-messages');
+            const messages = [];
+
+            messagesDiv.querySelectorAll('.chat-message').forEach(msg => {
+                const bubble = msg.querySelector('.message-bubble');
+                const type = msg.classList.contains('user') ? 'user' :
+                            msg.classList.contains('ai') ? 'ai' : 'system';
+                messages.push({
+                    type: type,
+                    content: bubble.textContent
+                });
+            });
+
+            localStorage.setItem(getChatHistoryKey(), JSON.stringify(messages));
+        }
+
+        // Load chat history from localStorage
+        function loadChatHistory() {
+            const savedHistory = localStorage.getItem(getChatHistoryKey());
+            if (savedHistory) {
+                try {
+                    const messages = JSON.parse(savedHistory);
+                    const messagesDiv = document.getElementById('chat-messages');
+
+                    // Clear welcome message
+                    messagesDiv.innerHTML = '';
+
+                    // Restore messages
+                    messages.forEach(msg => {
+                        addMessageToDOM(msg.content, msg.type, false); // false = don't save
+                    });
+                } catch (e) {
+                    console.error('Failed to load chat history:', e);
+                }
+            }
+        }
+
+        // Clear chat history for current book
+        function clearChatHistory() {
+            localStorage.removeItem(getChatHistoryKey());
+            const messagesDiv = document.getElementById('chat-messages');
+            messagesDiv.innerHTML = `
+                <div class="chat-message system">
+                    <div class="message-bubble">
+                        歡迎使用 AI 聊天助手！請先設定 Gemini API Key，然後就可以開始討論這本書了。
+                    </div>
+                </div>
+            `;
+        }
+
+        // Toggle chat sidebar
+        function toggleChat() {
+            const sidebar = document.getElementById('chat-sidebar');
+            const toggleBtn = document.getElementById('chat-toggle');
+            sidebar.classList.toggle('collapsed');
+            toggleBtn.classList.toggle('active');
+
+            // Save sidebar state
+            saveSidebarState();
+        }
+
+        // Save sidebar open/closed state
+        function saveSidebarState() {
+            const sidebar = document.getElementById('chat-sidebar');
+            const isOpen = !sidebar.classList.contains('collapsed');
+            localStorage.setItem('chat_sidebar_open', isOpen ? 'true' : 'false');
+        }
+
+        // Load sidebar state
+        function loadSidebarState() {
+            const isOpen = localStorage.getItem('chat_sidebar_open') === 'true';
+            const sidebar = document.getElementById('chat-sidebar');
+            const toggleBtn = document.getElementById('chat-toggle');
+
+            if (isOpen) {
+                sidebar.classList.remove('collapsed');
+                toggleBtn.classList.add('active');
+            } else {
+                sidebar.classList.add('collapsed');
+                toggleBtn.classList.remove('active');
+            }
+        }
+
+        // Save API Key to localStorage
+        function saveApiKey() {
+            const apiKey = document.getElementById('api-key-input').value.trim();
+            if (!apiKey) {
+                showStatus('請輸入 API Key', 'error');
+                return;
+            }
+
+            localStorage.setItem('gemini_api_key', apiKey);
+            showStatus('API Key 已儲存！', 'success');
+            document.getElementById('api-key-input').value = '';
+        }
+
+        // Load API Key from localStorage on page load
+        function loadApiKey() {
+            const apiKey = localStorage.getItem('gemini_api_key');
+            if (apiKey) {
+                showStatus('API Key 已載入', 'success');
+            }
+        }
+
+        // Save model selection to localStorage
+        function saveModelSelection() {
+            const modelSelect = document.getElementById('model-select');
+            const selectedModel = modelSelect.value;
+            localStorage.setItem('gemini_model', selectedModel);
+            showStatus(`模型已切換至 ${modelSelect.options[modelSelect.selectedIndex].text}`, 'success');
+        }
+
+        // Load model selection from localStorage
+        function loadModelSelection() {
+            const savedModel = localStorage.getItem('gemini_model');
+            if (savedModel) {
+                const modelSelect = document.getElementById('model-select');
+                modelSelect.value = savedModel;
+            }
+        }
+
+        // Show status message
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('settings-status');
+            statusDiv.textContent = message;
+            statusDiv.style.color = type === 'success' ? '#28a745' : '#dc3545';
+            setTimeout(() => {
+                statusDiv.textContent = '';
+            }, 3000);
+        }
+
+        // Add message to DOM (internal function)
+        function addMessageToDOM(content, type, shouldSave = true) {
+            const messagesDiv = document.getElementById('chat-messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chat-message ${type}`;
+
+            const bubble = document.createElement('div');
+            bubble.className = 'message-bubble';
+            bubble.textContent = content;
+
+            messageDiv.appendChild(bubble);
+            messagesDiv.appendChild(messageDiv);
+
+            // Scroll to bottom
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+            // Save to localStorage if requested
+            if (shouldSave) {
+                saveChatHistory();
+            }
+        }
+
+        // Add message to chat (public function)
+        function addMessage(content, type) {
+            addMessageToDOM(content, type, true);
+        }
+
+        // Send message to AI
+        async function sendMessage(event) {
+            event.preventDefault();
+
+            const input = document.getElementById('chat-input');
+            const sendBtn = document.getElementById('send-btn');
+            const timeoutIndicator = document.getElementById('timeout-indicator');
+            const message = input.value.trim();
+
+            if (!message) return;
+
+            // Check if API key exists
+            const apiKey = localStorage.getItem('gemini_api_key');
+            if (!apiKey) {
+                addMessage('請先設定 Gemini API Key', 'system');
+                return;
+            }
+
+            // Disable input while processing
+            input.disabled = true;
+            sendBtn.disabled = true;
+            sendBtn.classList.add('loading');
+            sendBtn.textContent = '';
+
+            // Add user message
+            addMessage(message, 'user');
+            input.value = '';
+
+            // Create AbortController for timeout
+            const controller = new AbortController();
+            const timeoutDuration = 60000; // 60 seconds timeout
+            let timeoutId = null;
+
+            // Set up timeout
+            timeoutId = setTimeout(() => {
+                controller.abort();
+            }, timeoutDuration);
+
+            // Show countdown
+            let remainingTime = timeoutDuration / 1000;
+            const countdownInterval = setInterval(() => {
+                remainingTime--;
+                if (remainingTime > 0) {
+                    timeoutIndicator.textContent = `⏱️ 等待回應中... (${remainingTime}秒後超時)`;
+                }
+            }, 1000);
+
+            try {
+                // Get selected model
+                const modelSelect = document.getElementById('model-select');
+                const selectedModel = modelSelect.value;
+
+                // Prepare request body
+                const requestBody = {
+                    message: message,
+                    book_id: '{{ book_id }}',
+                    chapter_index: {{ chapter_index }},
+                    api_key: apiKey,
+                    model_name: selectedModel
+                };
+
+                // Add selected text if available
+                if (pendingSelectedText) {
+                    requestBody.selected_text = pendingSelectedText;
+                    pendingSelectedText = null; // Clear after sending
+                }
+
+                // Send to backend API with timeout
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestBody),
+                    signal: controller.signal
+                });
+
+                // Clear timeout and countdown
+                clearTimeout(timeoutId);
+                clearInterval(countdownInterval);
+                timeoutIndicator.textContent = '';
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (data.error) {
+                    addMessage(`錯誤: ${data.error}`, 'system');
+                } else {
+                    addMessage(data.response, 'ai');
+                }
+
+                // Clear selection after successful send
+                clearSelection();
+
+            } catch (error) {
+                // Clear timeout and countdown
+                clearTimeout(timeoutId);
+                clearInterval(countdownInterval);
+                timeoutIndicator.textContent = '';
+
+                console.error('Chat error:', error);
+
+                if (error.name === 'AbortError') {
+                    addMessage('⚠️ 請求超時（超過60秒）。請檢查網路連線或稍後再試。', 'system');
+                } else {
+                    addMessage(`發生錯誤: ${error.message}`, 'system');
+                }
+            } finally {
+                // Re-enable input
+                input.disabled = false;
+                sendBtn.disabled = false;
+                sendBtn.classList.remove('loading');
+                sendBtn.textContent = '發送';
+                timeoutIndicator.textContent = '';
+                input.focus();
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadApiKey();
+            loadModelSelection();
+            loadSidebarState();
+            loadChatHistory();
+            initTextSelection();
+            initChatResizer();
+            loadChatWidth();
+        });
+
+        // ========== CHAT RESIZER FUNCTIONALITY ==========
+
+        function initChatResizer() {
+            const resizer = document.getElementById('chat-resizer');
+            const sidebar = document.getElementById('chat-sidebar');
+            let isResizing = false;
+            let startX = 0;
+            let startWidth = 0;
+
+            resizer.addEventListener('mousedown', (e) => {
+                isResizing = true;
+                startX = e.clientX;
+                startWidth = sidebar.offsetWidth;
+                sidebar.classList.add('resizing');
+                resizer.classList.add('resizing');
+                document.body.style.cursor = 'ew-resize';
+                document.body.style.userSelect = 'none';
+                e.preventDefault();
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isResizing) return;
+
+                const deltaX = startX - e.clientX;
+                const newWidth = startWidth + deltaX;
+
+                // Enforce min and max width
+                const minWidth = 280;
+                const maxWidth = 600;
+                const constrainedWidth = Math.max(minWidth, Math.min(maxWidth, newWidth));
+
+                sidebar.style.width = constrainedWidth + 'px';
+                sidebar.style.setProperty('--chat-width', constrainedWidth + 'px');
+            });
+
+            document.addEventListener('mouseup', () => {
+                if (isResizing) {
+                    isResizing = false;
+                    sidebar.classList.remove('resizing');
+                    resizer.classList.remove('resizing');
+                    document.body.style.cursor = '';
+                    document.body.style.userSelect = '';
+
+                    // Save width to localStorage
+                    saveChatWidth(sidebar.offsetWidth);
+                }
+            });
+        }
+
+        function saveChatWidth(width) {
+            localStorage.setItem('chat_sidebar_width', width);
+        }
+
+        function loadChatWidth() {
+            const savedWidth = localStorage.getItem('chat_sidebar_width');
+            if (savedWidth) {
+                const sidebar = document.getElementById('chat-sidebar');
+                const width = parseInt(savedWidth);
+                sidebar.style.width = width + 'px';
+                sidebar.style.setProperty('--chat-width', width + 'px');
+            }
+        }
+
+        // ========== TEXT SELECTION FUNCTIONALITY ==========
+
+        let selectedText = '';
+        let savedRange = null; // Save the Range object for CSS Custom Highlight API
+
+        function initTextSelection() {
+            const contentArea = document.querySelector('.book-content');
+            const chatSidebar = document.getElementById('chat-sidebar');
+
+            // Check if CSS Custom Highlight API is supported
+            const supportsHighlightAPI = 'highlights' in CSS;
+
+            // Listen for text selection
+            document.addEventListener('mouseup', (e) => {
+                // Don't process if clicking inside chat sidebar
+                if (chatSidebar.contains(e.target)) {
+                    return;
+                }
+
+                // Small delay to ensure selection is complete
+                setTimeout(() => {
+                    const selection = window.getSelection();
+                    const text = selection.toString().trim();
+
+                    if (text && text.length > 0) {
+                        // Check if selection is within book content
+                        const range = selection.getRangeAt(0);
+                        const container = range.commonAncestorContainer;
+                        const isInContent = contentArea.contains(container.nodeType === 3 ? container.parentNode : container);
+
+                        if (isInContent) {
+                            selectedText = text;
+                            pendingSelectedText = text;
+                            savedRange = range.cloneRange(); // Save the range
+
+                            // Use CSS Custom Highlight API to create persistent highlight
+                            if (supportsHighlightAPI) {
+                                const highlight = new Highlight(savedRange);
+                                CSS.highlights.set('text-selection', highlight);
+                            }
+                        } else {
+                            // Clicked outside book content (but not in chat sidebar)
+                            clearSelection();
+                        }
+                    } else {
+                        // No text selected, clear if clicked outside chat sidebar
+                        clearSelection();
+                    }
+                }, 10);
+            });
+
+            // Listen for clicks to clear selection when clicking outside
+            document.addEventListener('mousedown', (e) => {
+                // If clicking in chat sidebar, keep selection
+                if (chatSidebar.contains(e.target)) {
+                    return;
+                }
+
+                // If clicking in book content area, might be starting a new selection
+                if (contentArea.contains(e.target)) {
+                    return;
+                }
+
+                // Clicking elsewhere (TOC, etc.) - clear selection
+                clearSelection();
+            });
+        }
+
+        function clearSelection() {
+            selectedText = '';
+            pendingSelectedText = null;
+            savedRange = null;
+
+            // Clear CSS Custom Highlight
+            if ('highlights' in CSS) {
+                CSS.highlights.delete('text-selection');
+            }
+
+            // Also clear native selection
+            window.getSelection().removeAllRanges();
         }
     </script>
 </body>
