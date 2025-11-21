@@ -865,7 +865,6 @@
             });
 
             // Restore selection after input gets focus
-            const chatInput = document.getElementById('chat-input');
             chatInput.addEventListener('focus', () => {
                 if (savedRange) {
                     // Use requestAnimationFrame to restore selection after focus is established
